@@ -3,22 +3,22 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use App\Models\BannerPrimary;
 use App\Models\BannerSecondary;
+use App\Models\Bundle;
+use App\Models\CartItem;
 use App\Models\Category;
-use App\Models\SubCategory;
-use App\Models\Voucher;
 use App\Models\Product;
-use App\Models\Search;
+use App\Models\ProductBundle;
+use App\Models\ProductFavourite;
 use App\Models\ProductView;
 use App\Models\RatingProduct;
-use App\Models\ProductFavourite;
-use App\Models\CartItem;
-use App\Models\Bundle;
-use App\Models\ProductBundle;
+use App\Models\Search;
+use App\Models\SubCategory;
+use App\Models\Voucher;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class MobilePageController extends Controller
 {
@@ -39,7 +39,7 @@ class MobilePageController extends Controller
                 'message' => '',
                 'data' => [
                     'cart_items' => $cartItems,
-                ]
+                ],
             ]
         );
     }
@@ -64,7 +64,7 @@ class MobilePageController extends Controller
         }])->where('customer_id', Auth::user()->customer_id)->get();
 
         foreach ($mostSearch as $item) {
-            $item->search_image = Product::where('product_name', 'like', '%' . $item->search_keyword . '%')->first()->product_cover;
+            $item->search_image = Product::where('product_name', 'like', '%'.$item->search_keyword.'%')->first()->product_cover;
         }
 
         $bundles = Bundle::where('bundle_show', 1)
@@ -76,7 +76,7 @@ class MobilePageController extends Controller
                 return $item->product_id;
             })->toArray();
 
-            $bundle->products = Product::whereIn('product_id', $ids)->limit(10)->get();
+            $bundle->products = Product::whereIn('product_id', $ids)->limit(5)->get();
         }
 
         return response()->json(
@@ -94,7 +94,7 @@ class MobilePageController extends Controller
                     'most_search' => $mostSearch,
                     'cart_items' => $cartItems,
                     'bundles' => $bundles,
-                ]
+                ],
             ]
         );
     }
@@ -123,11 +123,11 @@ class MobilePageController extends Controller
             ->get();
 
         foreach ($viewHistory as $item) {
-            $item->search_image = Product::where('product_name', 'like', '%' . $item->search_keyword . '%')->first()->product_cover;
+            $item->search_image = Product::where('product_name', 'like', '%'.$item->search_keyword.'%')->first()->product_cover;
         }
 
         foreach ($popularSearch as $item) {
-            $item->search_image = Product::where('product_name', 'like', '%' . $item->search_keyword . '%')->first()->product_cover;
+            $item->search_image = Product::where('product_name', 'like', '%'.$item->search_keyword.'%')->first()->product_cover;
         }
 
         return response()->json(
@@ -138,7 +138,7 @@ class MobilePageController extends Controller
                     'view_history' => $viewHistory,
                     'search_history' => $searchHistory,
                     'popular_search' => $popularSearch,
-                ]
+                ],
             ]
         );
     }
@@ -160,6 +160,7 @@ class MobilePageController extends Controller
 
         $relatedProducts = Product::where('product_active', 1)
             ->where('category_id', $product->category_id)
+            ->Where('product_id', '!=', $id)
             ->orderBy('product_sold', 'desc')
             ->limit(10)
             ->get();
@@ -174,7 +175,7 @@ class MobilePageController extends Controller
                     'product' => $product,
                     'reviews' => $reviews,
                     'related_products' => $relatedProducts,
-                ]
+                ],
             ]
         );
     }

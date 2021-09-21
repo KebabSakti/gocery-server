@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
-use Illuminate\Support\Facades\Validator;
+use App\Models\CustomerLinkedAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
@@ -19,32 +19,33 @@ class AuthController extends Controller
 
     public function authenticate(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'customer_id' => 'required',
-        ]);
+        $customer = Customer::where('customer_phone', $request->customer_phone)
+                            ->where('customer_phone', '!=', null)
+                            ->first();
 
-        if ($validator->fails()) {
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => $validator->errors()->first(),
-                    'data' => null,
-                ]
-            );
+        if (empty($customer)) {
+            $link = CustomerLinkedAccount::where('customer_linked_account_email', $request->customer_email)->first();
+
+            if (empty($link)) {
+                $customer = Customer::create([
+                        'customer_id' => Str::uuid(),
+                        'customer_name' => $request->customer_name,
+                        'customer_email' => $request->customer_email,
+                    ]);
+
+                CustomerLinkedAccount::create([
+                        'customer_id' => $customer->customer_id,
+                        'customer_linked_account_id' => Str::uuid(),
+                        'customer_linked_account_name' => $request->customer_name,
+                        'customer_linked_account_email' => $request->customer_email,
+                        'customer_linked_account_type' => $request->auth_type,
+                    ]);
+            } else {
+                $customer = Customer::where('customer_id', $link->customer_id)->first();
+            }
         }
 
-        $customer = Customer::firstOrCreate(
-            ['customer_id' => $request->customer_id],
-            [
-                'customer_phone' => $request->customer_phone,
-                'customer_name' => $request->customer_name,
-                'customer_email' => $request->customer_email,
-                'customer_password' => Hash::make($request->customer_password),
-                'customer_fcm' => $request->customer_fcm
-            ]
-        );
-
-        $token = $customer->createToken($request->customer_id)->plainTextToken;
+        $token = $customer->createToken($customer->customer_id)->plainTextToken;
 
         $customer->token = $token;
 
@@ -52,7 +53,7 @@ class AuthController extends Controller
             [
                 'success' => true,
                 'message' => '',
-                'data' => $customer
+                'data' => $customer,
             ]
         );
     }
@@ -127,7 +128,7 @@ class AuthController extends Controller
             [
                 'success' => true,
                 'message' => '',
-                'data' => $user
+                'data' => $user,
             ]
         );
     }
@@ -182,11 +183,12 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'message' => '',
-            'data' => null
+            'data' => null,
         ]);
     }
 
-    public function register(Request $request) {
+    public function register(Request $request)
+    {
         $exists = Customer::where('customer_email', $request->customer_email)
                           ->orWhere('customer_phone', $request->customer_phone)
                           ->first();
@@ -216,7 +218,7 @@ class AuthController extends Controller
             [
                 'success' => true,
                 'message' => '',
-                'data' => $customer
+                'data' => $customer,
             ]
         );
     }

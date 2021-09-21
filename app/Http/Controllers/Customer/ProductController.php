@@ -3,14 +3,13 @@
 namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bundle;
+use App\Models\Product;
+use App\Models\ProductBundle;
+use App\Models\ProductFavourite;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
-
-use App\Models\Product;
-use App\Models\ProductFavourite;
-use App\Models\ProductBundle;
-use App\Models\Bundle;
 
 class ProductController extends Controller
 {
@@ -41,7 +40,7 @@ class ProductController extends Controller
         }
 
         if (!empty($request->keyword)) {
-            $query->where('product_name', 'like', '%' . $request->keyword . '%');
+            $query->where('product_name', 'like', '%'.$request->keyword.'%');
         }
 
         if (!empty($request->high_rating_value)) {
@@ -135,7 +134,7 @@ class ProductController extends Controller
         }
 
         if (!empty($request->keyword)) {
-            $query->where('product_name', 'like', '%' . $request->keyword . '%');
+            $query->where('product_name', 'like', '%'.$request->keyword.'%');
         }
 
         if (!empty($request->high_rating_value)) {
@@ -197,7 +196,7 @@ class ProductController extends Controller
             ProductFavourite::create([
                 'customer_id' => Auth::user()->customer_id,
                 'product_id' => $request->product_id,
-                'product_favourites_id' => Str::uuid()
+                'product_favourites_id' => Str::uuid(),
             ]);
 
             $product->product_favourite = 1;

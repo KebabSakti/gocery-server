@@ -17,10 +17,10 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('customer')->group(function () {
     //AUTH
     Route::prefix('auth')->group(function () {
-        Route::post('/authenticate', [App\Http\Controllers\Customer\AuthController::class, 'authenticate']);
-        Route::post('/update', [App\Http\Controllers\Customer\AuthController::class, 'update']);
-        Route::post('/revoke', [App\Http\Controllers\Customer\AuthController::class, 'revoke']);
-        Route::post('/exist', [App\Http\Controllers\Customer\AuthController::class, 'exist']);
+        Route::post('authenticate', [App\Http\Controllers\Customer\AuthController::class, 'authenticate']);
+        Route::post('update', [App\Http\Controllers\Customer\AuthController::class, 'update']);
+        Route::post('revoke', [App\Http\Controllers\Customer\AuthController::class, 'revoke']);
+        Route::post('exist', [App\Http\Controllers\Customer\AuthController::class, 'exist']);
 
         Route::post('/register', [App\Http\Controllers\Customer\AuthController::class, 'register']);
     });

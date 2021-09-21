@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\CustomerLinkedAccount;
 use App\Models\Product;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
@@ -15,6 +16,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
+        // $customer = \App\Models\Customer::first();
+
+        // CustomerLinkedAccount::create([
+        //     'customer_id' => $customer->customer_id,
+        //     'customer_linked_account_name' => 'Kebab',
+        // ]);
+
         $faker = \Faker\Factory::create();
 
         $products = Product::all();
@@ -22,10 +30,10 @@ class DatabaseSeeder extends Seeder
         $i = 1;
         foreach ($products as $product) {
             $product->update([
-                'product_cover' => 'https://loremflickr.com/800/800/' . $faker->firstName(),
+                'product_cover' => 'https://loremflickr.com/350/350/'.$faker->domainWord(),
             ]);
 
-            $i++;
+            ++$i;
         }
 
         // $faker = \Faker\Factory::create();
