@@ -19,30 +19,82 @@ class AuthController extends Controller
 
     public function authenticate(Request $request)
     {
-        $customer = Customer::where('customer_phone', $request->customer_phone)
-                            ->where('customer_phone', '!=', null)
+        $customer = Customer::where('customer_id', $request->customer_id)
+                            ->orWhere('customer_phone', $request->customer_phone)
                             ->first();
 
         if (empty($customer)) {
-            $link = CustomerLinkedAccount::where('customer_linked_account_email', $request->customer_email)->first();
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'User tidak ditemukan',
+                    'data' => null,
+                ]
+            );
+        }
 
-            if (empty($link)) {
-                $customer = Customer::create([
-                        'customer_id' => Str::uuid(),
-                        'customer_name' => $request->customer_name,
-                        'customer_email' => $request->customer_email,
-                    ]);
+        $customer->update([
+            'customer_fcm' => $request->customer_fcm,
+        ]);
 
+        $token = $customer->createToken($customer->customer_id)->plainTextToken;
+
+        $customer->token = $token;
+
+        return response()->json(
+            [
+                'success' => true,
+                'message' => '',
+                'data' => $customer,
+            ]
+        );
+    }
+
+    public function social(Request $request)
+    {
+        $customer = Customer::where('customer_email', $request->customer_email)
+                            ->orWhereHas('customer_linked_accounts', function ($q) use ($request) {
+                                $q->where('customer_linked_account_email', $request->customer_email);
+                            })
+                            ->first();
+
+        if (empty($customer)) {
+            $customer = Customer::create([
+                    'customer_id' => Str::uuid(),
+                    'customer_name' => $request->customer_name,
+                    'customer_email' => $request->customer_email,
+                    'customer_fcm' => $request->customer_fcm,
+                ]);
+
+            CustomerLinkedAccount::create([
+                'customer_id' => $customer->customer_id,
+                'customer_linked_account_id' => Str::uuid(),
+                'customer_linked_account_name' => $request->customer_name,
+                'customer_linked_account_email' => $request->customer_email,
+                'customer_linked_account_type' => $request->auth_type,
+            ]);
+        } else {
+            if ($customer->customer_linked_accounts->count() == 0) {
                 CustomerLinkedAccount::create([
+                    'customer_id' => $customer->customer_id,
+                    'customer_linked_account_id' => Str::uuid(),
+                    'customer_linked_account_name' => $request->customer_name,
+                    'customer_linked_account_email' => $request->customer_email,
+                    'customer_linked_account_type' => $request->auth_type,
+                ]);
+            } else {
+                if ($customer->customer_linked_accounts->first()->customer_linked_account_type != $request->auth_type) {
+                    CustomerLinkedAccount::create([
                         'customer_id' => $customer->customer_id,
                         'customer_linked_account_id' => Str::uuid(),
                         'customer_linked_account_name' => $request->customer_name,
                         'customer_linked_account_email' => $request->customer_email,
                         'customer_linked_account_type' => $request->auth_type,
                     ]);
-            } else {
-                $customer = Customer::where('customer_id', $link->customer_id)->first();
+                }
             }
+
+            $customer = Customer::where('customer_id', $customer->customer_id)->first();
         }
 
         $token = $customer->createToken($customer->customer_id)->plainTextToken;
@@ -56,6 +108,57 @@ class AuthController extends Controller
                 'data' => $customer,
             ]
         );
+    }
+
+    public function register(Request $request)
+    {
+        $customer = Customer::create([
+            'customer_id' => Str::uuid(),
+            'customer_name' => $request->customer_name,
+            'customer_email' => $request->customer_email,
+            'customer_phone' => $request->customer_phone,
+            'customer_fcm' => $request->customer_fcm,
+        ]);
+
+        $token = $customer->createToken($customer->customer_id)->plainTextToken;
+
+        $customer->token = $token;
+
+        return response()->json(
+            [
+                'success' => true,
+                'message' => '',
+                'data' => $customer,
+            ]
+        );
+    }
+
+    public function exist(Request $request)
+    {
+        $customer = Customer::whereHas('customer_linked_accounts', function ($q) use ($request) {
+            $q->where('customer_linked_account_email', $request->customer_email);
+        })
+        ->orWhere(function ($q) use ($request) {
+            $q->where('customer_email', $request->customer_email)
+                ->orWhere('customer_phone', $request->customer_phone);
+        })
+        ->first();
+
+        if (!empty($customer)) {
+            return response()->json(
+                [
+                    'success' => false,
+                    'message' => 'Nomor hp atau email sudah terdaftar',
+                    'data' => null,
+                ]
+            );
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => '',
+            'data' => null,
+        ]);
     }
 
     public function update(Request $request)
@@ -158,67 +261,6 @@ class AuthController extends Controller
                 'success' => true,
                 'message' => 'Anda berhasil logout',
                 'data' => null,
-            ]
-        );
-    }
-
-    public function exist(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'customer_id' => 'exists:customers',
-            'customer_phone' => 'exists:customers',
-            'customer_email' => 'exists:customers',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => $validator->errors()->first(),
-                    'data' => null,
-                ]
-            );
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => '',
-            'data' => null,
-        ]);
-    }
-
-    public function register(Request $request)
-    {
-        $exists = Customer::where('customer_email', $request->customer_email)
-                          ->orWhere('customer_phone', $request->customer_phone)
-                          ->first();
-
-        if (!empty($exists)) {
-            return response()->json(
-                [
-                    'success' => false,
-                    'message' => 'User sudah terdaftar menggunakan email atau telp tersebut',
-                    'data' => null,
-                ]
-            );
-        }
-
-        $customer = Customer::create([
-            'customer_id' => Str::uuid(),
-            'customer_name' => $request->customer_name,
-            'customer_email' => $request->customer_email,
-            'customer_phone' => $request->customer_phone,
-        ]);
-
-        $token = $customer->createToken($customer->customer_id)->plainTextToken;
-
-        $customer->token = $token;
-
-        return response()->json(
-            [
-                'success' => true,
-                'message' => '',
-                'data' => $customer,
             ]
         );
     }

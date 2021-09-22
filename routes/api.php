@@ -23,6 +23,7 @@ Route::prefix('customer')->group(function () {
         Route::post('exist', [App\Http\Controllers\Customer\AuthController::class, 'exist']);
 
         Route::post('/register', [App\Http\Controllers\Customer\AuthController::class, 'register']);
+        Route::post('/social', [App\Http\Controllers\Customer\AuthController::class, 'social']);
     });
 
     //MOBILE PAGE
