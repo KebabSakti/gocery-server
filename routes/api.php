@@ -13,6 +13,16 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+//CALLBACK URL GROUP
+Route::prefix('callback')->group(function () {
+    Route::post('payment', [App\Http\Controllers\CallbackController::class, 'payment']);
+});
+
+//PAYMENT GROUP
+Route::prefix('payment')->group(function () {
+    Route::post('invoice', [App\Http\Controllers\PaymentController::class, 'invoice']);
+});
+
 //CUSTOMER API
 Route::prefix('customer')->group(function () {
     //AUTH
@@ -56,6 +66,10 @@ Route::prefix('customer')->group(function () {
 
         Route::prefix('bundle')->group(function () {
             Route::post('/', [App\Http\Controllers\Customer\BundleController::class, 'index']);
+        });
+
+        Route::prefix('order')->group(function () {
+            Route::post('create', [App\Http\Controllers\Customer\OrderController::class, 'create']);
         });
 
         //================================================================================================================//

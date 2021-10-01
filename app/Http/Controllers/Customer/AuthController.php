@@ -12,11 +12,6 @@ use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
-    public function __construct()
-    {
-        // $this->middleware('auth:sanctum')->except(['authenticate', 'exist']);
-    }
-
     public function authenticate(Request $request)
     {
         $customer = Customer::where('customer_id', $request->customer_id)
