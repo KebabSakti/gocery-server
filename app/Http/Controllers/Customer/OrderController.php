@@ -9,29 +9,31 @@ class OrderController extends Controller
 {
     public function create(Request $request)
     {
-        $sayur = false;
-        $lain = false;
+        $result = 'mitra';
+        $langsung = false;
+        $terjadwal = false;
+        $eksklusif = false; //Produk yang dijual oleh mitra dan kantor dengan jenis pengiriman LANGSUNG
 
         foreach ($request->items as $item) {
-            if ($sayur == false) {
-                $sayur = ($item['product_delivery_type'] == 'TERJADWAL') ? true : false;
+            if ($item['product_delivery_type'] == 'LANGSUNG' && $item['product_is_exclusive'] == 0) {
+                $langsung = true;
             }
 
-            if ($lain == false) {
-                $sayur = ($item['product_delivery_type'] == 'LANGSUNG' && $item['product_is_exclusive'] == false) ? true : false;
+            if ($item['product_delivery_type'] == 'TERJADWAL' && $item['product_is_exclusive'] == 0) {
+                $terjadwal = true;
+            }
+
+            if ($item['product_delivery_type'] == 'LANGSUNG' && $item['product_is_exclusive'] == 1) {
+                $eksklusif = true;
             }
         }
 
-        if ($sayur == false && $lain == false) {
-            $kurir = 'MITRA';
+        if ($eksklusif == true && ($langsung == false && $terjadwal == false)) {
+            $result = 'mitra';
         } else {
-            $kurir = 'KANTOR';
+            $result = 'kantor';
         }
 
-        return response()->json([
-            'sayur' => $sayur,
-            'lain' => $lain,
-            'kurir' => $kurir,
-        ]);
+        return response()->json($result);
     }
 }

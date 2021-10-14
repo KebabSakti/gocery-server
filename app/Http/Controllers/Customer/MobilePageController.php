@@ -16,6 +16,7 @@ use App\Models\RatingProduct;
 use App\Models\Search;
 use App\Models\SubCategory;
 use App\Models\Voucher;
+use App\Models\VoucherHistory;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -46,11 +47,12 @@ class MobilePageController extends Controller
 
     public function home()
     {
+        $user = Auth::user();
         $bannerPrimary = BannerPrimary::where('banner_primary_active', 1)->orderBy('created_at', 'desc')->get();
         $bannerSecondary = BannerSecondary::where('banner_secondary_active', 1)->orderBy('created_at', 'desc')->get();
         $category = Category::where('category_active', 1)->orderBy('category_order', 'asc')->get();
         $subCategory = SubCategory::where('sub_category_active', 1)->orderBy('sub_category_name', 'asc')->get();
-        $voucher = Voucher::whereDate('voucher_end', '<', Carbon::now())->orderBy('created_at', 'desc')->get();
+        $vouchers = Voucher::whereDate('voucher_end', '>', Carbon::now())->orderBy('voucher_amount', 'desc')->get();
         $productPopular = Product::where('product_active', 1)->orderBy('product_search', 'desc')->limit(10)->get();
         $product = Product::where('product_active', 1)->inRandomOrder()->simplePaginate(10);
         $mostSearch = Search::select(DB::raw('*, count(*) as search_count'))
@@ -61,7 +63,7 @@ class MobilePageController extends Controller
 
         $cartItems = CartItem::with(['product' => function ($q) {
             $q->where('product_active', 1);
-        }])->where('customer_id', Auth::user()->customer_id)->get();
+        }])->where('customer_id', $user->customer_id)->get();
 
         foreach ($mostSearch as $item) {
             $item->search_image = Product::where('product_name', 'like', '%'.$item->search_keyword.'%')->first()->product_cover;
@@ -76,7 +78,21 @@ class MobilePageController extends Controller
                 return $item->product_id;
             })->toArray();
 
-            $bundle->products = Product::whereIn('product_id', $ids)->limit(5)->get();
+            $bundle->products = Product::whereIn('product_id', $ids)->limit(10)->get();
+        }
+
+        $userVouchers = [];
+        foreach ($vouchers as $voucher) {
+            $history = VoucherHistory::where('voucher_id', $voucher->voucher_id)
+                                     ->where('customer_id', $user->customer_id)
+                                     ->get();
+
+            if (!empty($history)) {
+                if ($history->count() < $voucher->voucher_limit) {
+                    $voucher->voucher_limit = $voucher->voucher_limit - $history->count();
+                    array_push($userVouchers, $voucher);
+                }
+            }
         }
 
         return response()->json(
@@ -88,7 +104,7 @@ class MobilePageController extends Controller
                     'banner_secondary' => $bannerSecondary,
                     'category' => $category,
                     'sub_category' => $subCategory,
-                    'voucher' => $voucher,
+                    'voucher' => $userVouchers,
                     'product_popular' => $productPopular,
                     'product' => $product,
                     'most_search' => $mostSearch,

@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+//DEBUG
+Route::post('debug', [App\Http\Controllers\DebugController::class, 'debug']);
+
 //CALLBACK URL GROUP
 Route::prefix('callback')->group(function () {
     Route::post('payment', [App\Http\Controllers\CallbackController::class, 'payment']);
@@ -34,6 +37,8 @@ Route::prefix('customer')->group(function () {
 
         Route::post('/register', [App\Http\Controllers\Customer\AuthController::class, 'register']);
         Route::post('/social', [App\Http\Controllers\Customer\AuthController::class, 'social']);
+
+        Route::post('/firebase', [App\Http\Controllers\Customer\AuthController::class, 'firebase']);
     });
 
     //MOBILE PAGE

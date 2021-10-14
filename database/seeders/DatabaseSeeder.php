@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\CustomerLinkedAccount;
 use App\Models\Product;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -16,6 +17,61 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
+        $faker = \Faker\Factory::create();
+
+        \App\Models\VoucherHistory::create([
+            'voucher_id' => \App\Models\Voucher::inRandomOrder()->first()->voucher_id,
+            'order_id' => $faker->uuid,
+            'customer_id' => 'f03a276b-3324-4f03-b622-484013d8a8a4',
+            'voucher_history_id' => $faker->uuid,
+        ]);
+
+        // $images = [
+        //     'https://image.freepik.com/free-vector/gradient-sale-background_23-2148948683.jpg?size=500&ext=webp',
+        //     'https://image.freepik.com/free-vector/gradient-10-10-background_23-2149058126.jpg?size=500&ext=webp',
+        //     'https://image.freepik.com/free-vector/gradient-flash-sale-background_23-2149027975.jpg?size=500&ext=webp',
+        //     'https://img.freepik.com/free-vector/super-sale-horizontal-banner_52683-59532.jpg?size=338&ext=jpg?size=500&ext=webp',
+        //     'https://img.freepik.com/free-vector/final-sale-horizontal-banner_52683-59534.jpg?size=338&ext=jpg?size=500&ext=webp',
+        //     'https://image.freepik.com/free-vector/mega-sale-background-shop-now_23-2148902866.jpg?size=500&ext=webp',
+        //   ];
+
+        // for ($i = 0; $i < count($images); ++$i) {
+        //     \App\Models\Voucher::create([
+        //         'voucher_id' => $faker->uuid,
+        //         'voucher_code' => Str::upper($faker->word),
+        //         'voucher_image' => $images[$i],
+        //         'voucher_description' => $faker->text(2000),
+        //         'voucher_start' => Carbon::now(),
+        //         'voucher_end' => Carbon::now()->addMonth(),
+        //         'voucher_limit' => mt_rand(1, 3),
+        //         'voucher_amount' => mt_rand(5000, 20000),
+        //     ]);
+        // }
+
+        // \App\Models\MitraFee::create([
+        //     'mitra_fee_id' => $faker->uuid,
+        //     'mitra_fee_type' => 'FLAT',
+        //     'mitra_fee' => '500',
+        // ]);
+
+        // \App\Models\MitraFee::create([
+        //     'mitra_fee_id' => $faker->uuid,
+        //     'mitra_fee_type' => 'PERCENTAGE',
+        //     'mitra_fee' => '10',
+        // ]);
+
+        // \App\Models\ShippingFee::create([
+        //     'shipping_fee_id' => $faker->uuid,
+        //     'shipping_fee_delivery_type' => 'LANGSUNG',
+        //     'shipping_fee' => 1000,
+        // ]);
+
+        // \App\Models\ShippingFee::create([
+        //     'shipping_fee_id' => $faker->uuid,
+        //     'shipping_fee_delivery_type' => 'TERJADWAL',
+        //     'shipping_fee' => 10000,
+        // ]);
+
         // $customer = \App\Models\Customer::first();
 
         // CustomerLinkedAccount::create([
@@ -23,18 +79,16 @@ class DatabaseSeeder extends Seeder
         //     'customer_linked_account_name' => 'Kebab',
         // ]);
 
-        $faker = \Faker\Factory::create();
+        // $products = Product::all();
 
-        $products = Product::all();
+        // $i = 1;
+        // foreach ($products as $product) {
+        //     $product->update([
+        //         'product_cover' => 'https://loremflickr.com/350/350/'.$faker->domainWord(),
+        //     ]);
 
-        $i = 1;
-        foreach ($products as $product) {
-            $product->update([
-                'product_cover' => 'https://loremflickr.com/350/350/'.$faker->domainWord(),
-            ]);
-
-            ++$i;
-        }
+        //     ++$i;
+        // }
 
         // $faker = \Faker\Factory::create();
 
